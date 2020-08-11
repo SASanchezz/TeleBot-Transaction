@@ -9,4 +9,4 @@ Special_column = tables.loc[tables.Full_name == "Доллар".lower(), 'In_griv
 #print(tables[0]['Полное название'].head())
 """for i in range(0, len(Special_column)):
     for number in Special_column[i].split(" "):"""
-#print(list(tables["Full_name"]))
+#print(tables)

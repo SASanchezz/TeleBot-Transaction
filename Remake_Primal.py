@@ -1,4 +1,5 @@
-#Libraries
+# Libraries
+import Data
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardRemove, ContentTypes, \
@@ -9,124 +10,148 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from config import bot_token
 import logging
-#from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-#Constants
+# from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
+# Constants
 start_currency = ''
 # Set
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token = bot_token)
+bot = Bot(token=bot_token)
 dp = Dispatcher(bot, storage=MemoryStorage())
+#Yes/Not
+button_yes = KeyboardButton('Yeah')
+button_not = KeyboardButton('Nope')
+Yes_Not = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(button_yes, button_not)
+#Reload keyboard
+button = KeyboardButton('/start')
+restart = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(button)
 # All currency
-keyboard1 = ReplyKeyboardMarkup() # Keyboard with values
-keyboard1.row('доллар', 'евро', 'рубль', 'фунт стерлингов', 'швейцарский франк', 'польский злотый', 'японская йена' )
-keyboard1.row('канадский доллар', 'австралийский доллар', 'грузинский лари', 'молдавский лей', 'китайский юань', 'датская крона', 'норвежская крона')
-keyboard1.row('шведская крона', 'новый белорусский рубль', 'чешская крона', 'израильский шекель', 'казахстанский тенге', 'венгерский форинт', 'сингапурский доллар')
-keyboard1.row('азербайджанский манат', 'алжирский динар', 'армянский драм', 'бангладешская така', 'болгарский лев', 'бразильский реал', 'вьетнамский донг')
-keyboard1.row('ганский седи', 'гонконгский доллар', 'египетский фунт', 'марокканский дирхам', 'индийская рупия', 'индонезийская рупия', 'иракский динар')
-keyboard1.row('иранский риал', 'кыргызстанский сом', 'южнокорейская вона', 'ливанский фунт', 'ливийский динар', 'малайзийский ринггит', 'мексиканское песо')
-keyboard1.row('новозеландский доллар', 'дирхам оаэ', 'румынский лей', 'саудовский риал', 'сербский динар', 'таджикский сомони', 'тайский бат')
-keyboard1.row('новый тайваньский доллар', 'тунисский динар', 'новый манат', 'турецкая лира', 'узбекский сум', 'филиппинское песо', 'хорватская куна')
+keyboard1 = ReplyKeyboardMarkup()  # Keyboard with values
+keyboard1.row('доллар', 'евро', 'рубль', 'фунт стерлингов', 'швейцарский франк', 'польский злотый', 'японская йена')
+keyboard1.row('канадский доллар', 'австралийский доллар', 'грузинский лари', 'молдавский лей', 'китайский юань',
+              'датская крона', 'норвежская крона')
+keyboard1.row('шведская крона', 'новый белорусский рубль', 'чешская крона', 'израильский шекель', 'казахстанский тенге',
+              'венгерский форинт', 'сингапурский доллар')
+keyboard1.row('азербайджанский манат', 'алжирский динар', 'армянский драм', 'бангладешская така', 'болгарский лев',
+              'бразильский реал', 'вьетнамский донг')
+keyboard1.row('ганский седи', 'гонконгский доллар', 'египетский фунт', 'марокканский дирхам', 'индийская рупия',
+              'индонезийская рупия', 'иракский динар')
+keyboard1.row('иранский риал', 'кыргызстанский сом', 'южнокорейская вона', 'ливанский фунт', 'ливийский динар',
+              'малайзийский ринггит', 'мексиканское песо')
+keyboard1.row('новозеландский доллар', 'дирхам оаэ', 'румынский лей', 'саудовский риал', 'сербский динар',
+              'таджикский сомони', 'тайский бат')
+keyboard1.row('новый тайваньский доллар', 'тунисский динар', 'новый манат', 'турецкая лира', 'узбекский сум',
+              'филиппинское песо', 'хорватская куна')
 # Starting keyboard
-first_button = KeyboardButton('Из гривны в ...') #state 1
-second_button = KeyboardButton('Из ... в гривну') #state 2
-keyboard0 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(first_button, second_button, )
+first_button = KeyboardButton('Из гривны в ...')  # state 1
+second_button = KeyboardButton('Из ... в гривну')  # state 2
+keyboard0 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(first_button, second_button)
 # Few options of exchanging
-case1 = lambda message: message.text == 'Из гривны в ...' #state 1
-case2 = lambda message: message.text == 'Из ... в гривну' #state 2
-#Try to make state with class/OOP
+case1 = lambda message: message.text == 'Из гривны в ...'  # state 1
+case2 = lambda message: message.text == 'Из ... в гривну'  # state 2
+
+
+# Try to make state with class/OOP
 
 class Option(StatesGroup):
-    kind_of1 = State()
-    currency1 = State()
-    amount1 = State()
+    first = State()
+    second = State()
+    third = State()
+    forth = State()
 
-    kind_of2 = State()
-    currency2 = State()
-    amount2 = State()
 
-    for_start = State()
-    finish = State()
-#Start command
-@dp.message_handler(commands= ['start'], state="*")
+# Start command
+@dp.message_handler(commands=['start'], state="*")
 async def start(message: Message, state: FSMContext):
     await message.answer('Выбери тип перевода',
                          reply_markup=keyboard0)
-    await Option.for_start.set()
+    await Option.first.set()
 
-@dp.message_handler(state=Option.for_start, content_types=ContentTypes.TEXT)
-async def start2(message: Message, state: FSMContext):
+
+
+
+# FIRST STAGE
+@dp.message_handler(state=Option.first, content_types=ContentTypes.TEXT)
+async def from_gryvna(message: Message, state: FSMContext):
+    await state.update_data(transaction_option=message.text)
     if message.text == 'Из гривны в ...':
-        await Option.kind_of1.set()
+        await message.answer('Введите количество грн (копейки через точку)')
 
     if message.text == 'Из ... в гривну':
-        await Option.kind_of2.set()
-    await state.update_data(transaction_option=message.text)
-#From grn to...
-@dp.message_handler(state=Option.kind_of1, content_types=ContentTypes.TEXT)
-async def from_gryvna(message: Message, state: FSMContext):
-    print("There")
+        await message.answer('Введите начальную валюту',
+                             reply_markup=keyboard1)
+    await Option.second.set()
 
-    await message.answer('Введите количество грн (копейки через точку)')
-    await Option.amount1.set()
-#Getting amount
-@dp.message_handler(state=Option.amount1, content_types=ContentTypes.TEXT)
+
+
+
+# SECOND STAGE
+@dp.message_handler(state=Option.second, content_types=ContentTypes.TEXT)
 async def amount1(message: Message, state: FSMContext):
     user_data = await state.get_data()
     if user_data['transaction_option'] == 'Из гривны в ...':
-        await state.update_data(amount=message.text)
-        await message.answer('Введите валюту',
-                             reply_markup=keyboard1)
-        await Option.currency1.set()
+        try:
+            message1 = float(message.text)
+            await state.update_data(amount=message1)
+            await message.answer('Введите конечную валюту',
+                                 reply_markup=keyboard1)
+        except ValueError:
+            await message.answer('Ты дурак? Я же просил кол-во')
+            await message.answer('Я пока что не шарю как решать такие проблемы, поэтому просто перезапусти через /start',
+                                 reply_markup=restart)
 
-@dp.message_handler(state=Option.currency1, content_types=ContentTypes.TEXT)
+    if user_data['transaction_option'] == 'Из ... в гривну':
+        if message.text in Data.tables['Full_name']:
+            await state.update_data(currency=message.text)
+            await message.answer('Введите количество грн (копейки через точку)')
+        else:
+            await message.answer('Ты не ту валюту ввёл, чёрт. Перезапускай, чё смотришь?',
+                                 reply_markup=restart)
+
+    await Option.third.set()
+
+
+
+
+#THIRD STAGE
+@dp.message_handler(state=Option.third, content_types=ContentTypes.TEXT)
 async def currency1(message: Message, state: FSMContext):
     user_data = await state.get_data()
     if user_data['transaction_option'] == 'Из гривны в ...':
-        await Option.finish.set()
-        await state.update_data(currency=message.text)
-        await message.answer(user_data['transaction_option'])
+        if message.text in Data.tables['Full_name']:
+            await state.update_data(currency=message.text)
+            await message.answer('Перевести {0} грн в {1} ?'.format(user_data['amount'], message.text),
+                                 reply_markup=Yes_Not)
+    else:
+        await message.answer('Ты не ту валюту ввёл, чёрт. Перезапускай, чё смотришь?',
+                                 reply_markup=restart)
 
-@dp.message_handler(state=Option.finish, content_types=ContentTypes.TEXT)
+    if user_data['transaction_option'] == 'Из ... в гривну':
+        try:
+            message2 = float(message.text)
+            await state.update_data(amount=message2)
+            await message.answer('Перевести {0} {1} в грн ?'.format(message2, user_data['currency']),
+                                 reply_markup=Yes_Not)
+        except ValueError:
+            await message.answer('Это не число, дегенерат. Перезапускай',
+                                 reply_markup=restart)
+
+
+
+
+#FORTH STAGE
+@dp.message_handler(state=Option.forth, content_types=ContentTypes.TEXT)
 async def finish1(message: Message, state: FSMContext):
     user_data = await state.get_data()
-    if user_data['transaction_option'] == 'Из гривны в ...':
-        await message.answer(user_data['currency'])
+    if message.text == "Nope":
+        await message.answer('Что тебе цже не так, гнида?',
+                             reply_markup=restart)
+    if message.text == 'Yeah':
+        if user_data['transaction_option'] == 'Из гривны в ...':
+            Sum = user_data['amount'] / Data.tables.loc[tables.Full_name == user_data['currency'].lower(), 'In_grivnas']
+            await message.answer('Ну... Вот: {}'.format(Sum))
 
-
-#From some currency to grivna
-@dp.message_handler(state=Option.kind_of2, content_types=ContentTypes.TEXT)
-async def to_gryvna(message: Message, state: FSMContext):
-    if message.text == 'Из ... в гривну':
-        await state.update_data(transaction_option=message.text)
-        await message.answer('Введите валюту',
-                            reply_markup=keyboard1)
-        await Option.currency2.set()
-
-
-@dp.message_handler(state=Option.currency2, content_types=ContentTypes.TEXT)
-async def currency2(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    if user_data['transaction_option'] == 'Из ... в гривну':
-        await state.update_data(currency=message.text)
-        await message.answer('Введите Введите количество (копейки через точку')
-        await Option.amount2.set()
-
-
-@dp.message_handler(state=Option.amount2, content_types=ContentTypes.TEXT)
-async def amount2(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    if user_data['transaction_option'] == 'Из ... в гривну':
-        await Option.finish.set()
-        await state.update_data(amount=message.text)
-        await message.answer(user_data['transaction_option'])
-
-
-@dp.message_handler(state=Option.finish, content_types=ContentTypes.TEXT)
-async def finish2(message: Message, state: FSMContext):
-    user_data = await state.get_data()
-    if user_data['transaction_option'] == 'Из ... в гривну':
-        await message.answer(user_data['currency'])
 
 
 if __name__ == '__main__':

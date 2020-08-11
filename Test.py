@@ -17,10 +17,13 @@ bot = Bot(token = bot_token)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 class Option(StatesGroup):
-    kind_of_transaction1 = State()
+    kind = State()
     amount1 = State()
-    kind_of_transaction2 = State()
     for_start = State()
+
+first_button1 = KeyboardButton('For smth')
+second_button1 = KeyboardButton('Another one')
+keyboard1 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(first_button1, second_button1, )
 
 first_button = KeyboardButton('First_button') #state 1
 second_button = KeyboardButton('Second_button') #state 2
@@ -35,27 +38,24 @@ async def start(message: Message, state: FSMContext):
 
 @dp.message_handler(state=Option.for_start, content_types=ContentTypes.TEXT)
 async def start2(message: Message, state: FSMContext):
-    await state.update_data(transaction_option=message.text)
-    if message.text == 'First_button':
-        await Option.kind_of_transaction1.set()
+    await message.answer('lol',
+                         reply_markup=keyboard1)
+    await Option.kind.set()
 
-    if message.text == 'Second_button':
-        await Option.kind_of_transaction2.set()
-
-      #FIRST CASE
-@dp.message_handler(state=Option.kind_of_transaction1, content_types=ContentTypes.TEXT)
-async def from_gryvna(message: Message, state: FSMContext):
+    # FIRST CASE
+@dp.message_handler(state=Option.kind)
+async def from_gryvna(message: Message):
+    await message.answer("DONE")
     print("There")
-    await message.answer('Anything')
 
-
+"""
     #SECOND CASE
 @dp.message_handler(state=Option.kind_of_transaction2, content_types=ContentTypes.TEXT)
 async def to_gryvna(message: Message, state: FSMContext):
     print("There2")
     if message.text == 'First_button':
         await state.update_data(transaction_option=message.text)
-        await message.answer('Any')
+        await message.answer('Any')"""
 
 
 if __name__ == '__main__':
