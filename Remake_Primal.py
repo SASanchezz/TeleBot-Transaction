@@ -26,22 +26,30 @@ Yes_Not = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
 #Reload keyboard
 button = KeyboardButton('/start')
 restart = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(button)
+# Type of keyboard
+button_full = KeyboardButton('All (56)')
+button_part = KeyboardButton('4 main')
+keyboard_type = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(button_full, button_part)
+# Some currency
+keyboard_short = ReplyKeyboardMarkup(one_time_keyboard=True)
+keyboard_short.row('доллар', 'евро')
+keyboard_short.row('рубль', 'фунт стерлингов')
 # All currency
-keyboard1 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)  # Keyboard with values
-keyboard1.row('доллар', 'евро', 'рубль', 'фунт стерлингов', 'швейцарский франк', 'польский злотый', 'японская йена')
-keyboard1.row('канадский доллар', 'австралийский доллар', 'грузинский лари', 'молдавский лей', 'китайский юань',
+keyboard_long = ReplyKeyboardMarkup(one_time_keyboard=True)  # Keyboard with values
+keyboard_long.row('доллар', 'евро', 'рубль', 'фунт стерлингов', 'швейцарский франк', 'польский злотый', 'японская йена')
+keyboard_long.row('канадский доллар', 'австралийский доллар', 'грузинский лари', 'молдавский лей', 'китайский юань',
               'датская крона', 'норвежская крона')
-keyboard1.row('шведская крона', 'новый белорусский рубль', 'чешская крона', 'израильский шекель', 'казахстанский тенге',
+keyboard_long.row('шведская крона', 'новый белорусский рубль', 'чешская крона', 'израильский шекель', 'казахстанский тенге',
               'венгерский форинт', 'сингапурский доллар')
-keyboard1.row('азербайджанский манат', 'алжирский динар', 'армянский драм', 'бангладешская така', 'болгарский лев',
+keyboard_long.row('азербайджанский манат', 'алжирский динар', 'армянский драм', 'бангладешская така', 'болгарский лев',
               'бразильский реал', 'вьетнамский донг')
-keyboard1.row('ганский седи', 'гонконгский доллар', 'египетский фунт', 'марокканский дирхам', 'индийская рупия',
+keyboard_long.row('ганский седи', 'гонконгский доллар', 'египетский фунт', 'марокканский дирхам', 'индийская рупия',
               'индонезийская рупия', 'иракский динар')
-keyboard1.row('иранский риал', 'кыргызстанский сом', 'южнокорейская вона', 'ливанский фунт', 'ливийский динар',
+keyboard_long.row('иранский риал', 'кыргызстанский сом', 'южнокорейская вона', 'ливанский фунт', 'ливийский динар',
               'малайзийский ринггит', 'мексиканское песо')
-keyboard1.row('новозеландский доллар', 'дирхам оаэ', 'румынский лей', 'саудовский риал', 'сербский динар',
+keyboard_long.row('новозеландский доллар', 'дирхам оаэ', 'румынский лей', 'саудовский риал', 'сербский динар',
               'таджикский сомони', 'тайский бат')
-keyboard1.row('новый тайваньский доллар', 'тунисский динар', 'новый манат', 'турецкая лира', 'узбекский сум',
+keyboard_long.row('новый тайваньский доллар', 'тунисский динар', 'новый манат', 'турецкая лира', 'узбекский сум',
               'филиппинское песо', 'хорватская куна')
 # Starting keyboard
 first_button = KeyboardButton('Из гривны в ...')  # state 1
@@ -59,6 +67,7 @@ class Option(StatesGroup):
     second = State()
     third = State()
     forth = State()
+    prefirst = State()
 
 
 # Start command
@@ -66,21 +75,34 @@ class Option(StatesGroup):
 async def start(message: Message, state: FSMContext):
     await message.answer('Выбери тип перевода',
                          reply_markup=keyboard0)
+    await Option.prefirst.set()
+
+
+#Choose quantity of currency
+@dp.message_handler(state=Option.prefirst, content_types=ContentTypes.TEXT)
+async def start(message: Message, state: FSMContext):
+    await state.update_data(transaction_option=message.text)
+    await message.answer('Сколько валют нужно?',
+                         reply_markup=keyboard_type)
     await Option.first.set()
-
-
-
 
 # FIRST STAGE
 @dp.message_handler(state=Option.first, content_types=ContentTypes.TEXT)
 async def from_gryvna(message: Message, state: FSMContext):
-    await state.update_data(transaction_option=message.text)
-    if message.text == 'Из гривны в ...':
+    user_data = await state.get_data()
+    await state.update_data(keyboard_type=message.text)
+    if message.text == 'All (56)':
+        main_keyboard = keyboard_long
+    elif message.text == '4 main':
+        main_keyboard = keyboard_short
+    else:
+        message.answer('Чё за херь?', reply_markup=restart)
+    if user_data['transaction_option'] == 'Из гривны в ...':
         await message.answer('Введите количество грн (копейки через точку)')
 
-    if message.text == 'Из ... в гривну':
+    if user_data['transaction_option'] == 'Из ... в гривну':
         await message.answer('Введите начальную валюту',
-                             reply_markup=keyboard1)
+                             reply_markup=main_keyboard)
     await Option.second.set()
 
 
@@ -90,12 +112,19 @@ async def from_gryvna(message: Message, state: FSMContext):
 @dp.message_handler(state=Option.second, content_types=ContentTypes.TEXT)
 async def amount1(message: Message, state: FSMContext):
     user_data = await state.get_data()
+    if user_data['keyboard_type'] == 'All (56)':
+        main_keyboard = keyboard_long
+    elif user_data['keyboard_type'] == '4 main':
+        main_keyboard = keyboard_short
+    else:
+        message.answer('Чё за херь?', reply_markup=restart)
+
     if user_data['transaction_option'] == 'Из гривны в ...':
         try:
             message1 = float(message.text)
             await state.update_data(amount=message1)
             await message.answer('Введите конечную валюту',
-                                 reply_markup=keyboard1)
+                                 reply_markup=main_keyboard)
         except ValueError:
             await message.answer('Ты дурак? Я же просил кол-во')
             await message.answer('Я пока что не шарю как решать такие проблемы, поэтому просто перезапусти через /start',
@@ -145,17 +174,19 @@ async def currency1(message: Message, state: FSMContext):
 async def finish1(message: Message, state: FSMContext):
     user_data = await state.get_data()
     if message.text == "Nope":
-        await message.answer('Что тебе цже не так, гнида?',
+        await message.answer('Что тебе уже не так, гнида?',
                              reply_markup=restart)
     if message.text == 'Yeah':
         Change = float(list(Data.tables.loc[Data.tables.Full_name == user_data['currency'].lower(), 'In_grivnas'])[0].split()[0])
         if user_data['transaction_option'] == 'Из гривны в ...':
-            Sum1 = user_data['amount'] / Change
-            await message.answer('Ну... Вот:   {0} {1}ов'.format(Sum1, user_data['currency']))
+            Sum1 = round(user_data['amount'] / Change, 5)
+            await message.answer('Ну... Вот:   {0} {1}ов'.format(Sum1, user_data['currency']),
+                                                                 reply_markup=restart)
 
         elif user_data['transaction_option'] == 'Из ... в гривну':
-            Sum2 = user_data['amount'] * Change
-            await message.answer('Ну... Вот:   {} грн'.format(Sum2))
+            Sum2 = round(user_data['amount'] * Change, 5)
+            await message.answer('Ну... Вот:   {} грн'.format(Sum2),
+                                 reply_markup=restart)
 
 
 if __name__ == '__main__':
