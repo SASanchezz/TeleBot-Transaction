@@ -27,7 +27,7 @@ Yes_Not = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(
 button = KeyboardButton('/start')
 restart = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(button)
 # All currency
-keyboard1 = ReplyKeyboardMarkup()  # Keyboard with values
+keyboard1 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)  # Keyboard with values
 keyboard1.row('доллар', 'евро', 'рубль', 'фунт стерлингов', 'швейцарский франк', 'польский злотый', 'японская йена')
 keyboard1.row('канадский доллар', 'австралийский доллар', 'грузинский лари', 'молдавский лей', 'китайский юань',
               'датская крона', 'норвежская крона')
@@ -102,11 +102,11 @@ async def amount1(message: Message, state: FSMContext):
                                  reply_markup=restart)
 
     if user_data['transaction_option'] == 'Из ... в гривну':
-        if message.text in Data.tables['Full_name']:
+        if message.text in list(Data.tables['Full_name']):
             await state.update_data(currency=message.text)
             await message.answer('Введите количество грн (копейки через точку)')
         else:
-            await message.answer('Ты не ту валюту ввёл, чёрт. Перезапускай, чё смотришь?',
+            await message.answer('Ты не ту валюту или вообще число ввёл, идиот. Перезапускай, чё смотришь?',
                                  reply_markup=restart)
 
     await Option.third.set()
@@ -119,24 +119,24 @@ async def amount1(message: Message, state: FSMContext):
 async def currency1(message: Message, state: FSMContext):
     user_data = await state.get_data()
     if user_data['transaction_option'] == 'Из гривны в ...':
-        if message.text in Data.tables['Full_name']:
+        if message.text in list(Data.tables['Full_name']):
             await state.update_data(currency=message.text)
             await message.answer('Перевести {0} грн в {1} ?'.format(user_data['amount'], message.text),
                                  reply_markup=Yes_Not)
-    else:
-        await message.answer('Ты не ту валюту ввёл, чёрт. Перезапускай, чё смотришь?',
+        else:
+            await message.answer('Ты не ту валюту или вообще число ввёл, идиот. Перезапускай, чё смотришь?',
                                  reply_markup=restart)
 
     if user_data['transaction_option'] == 'Из ... в гривну':
         try:
             message2 = float(message.text)
             await state.update_data(amount=message2)
-            await message.answer('Перевести {0} {1} в грн ?'.format(message2, user_data['currency']),
+            await message.answer('Перевести {0} {1}а в грн ?'.format(message2, user_data['currency']),
                                  reply_markup=Yes_Not)
         except ValueError:
             await message.answer('Это не число, дегенерат. Перезапускай',
                                  reply_markup=restart)
-
+    await Option.forth.set()
 
 
 
@@ -148,10 +148,14 @@ async def finish1(message: Message, state: FSMContext):
         await message.answer('Что тебе цже не так, гнида?',
                              reply_markup=restart)
     if message.text == 'Yeah':
+        Change = float(list(Data.tables.loc[Data.tables.Full_name == user_data['currency'].lower(), 'In_grivnas'])[0].split()[0])
         if user_data['transaction_option'] == 'Из гривны в ...':
-            Sum = user_data['amount'] / Data.tables.loc[tables.Full_name == user_data['currency'].lower(), 'In_grivnas']
-            await message.answer('Ну... Вот: {}'.format(Sum))
+            Sum1 = user_data['amount'] / Change
+            await message.answer('Ну... Вот:   {0} {1}ов'.format(Sum1, user_data['currency']))
 
+        elif user_data['transaction_option'] == 'Из ... в гривну':
+            Sum2 = user_data['amount'] * Change
+            await message.answer('Ну... Вот:   {} грн'.format(Sum2))
 
 
 if __name__ == '__main__':
