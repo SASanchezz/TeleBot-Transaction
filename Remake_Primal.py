@@ -176,8 +176,9 @@ async def finish1(message: Message, state: FSMContext):
     if message.text == "Nope":
         await message.answer('Что тебе уже не так, гнида?',
                              reply_markup=restart)
-    if message.text == 'Yeah':
+    if message.text == 'Yeah':   #Calculation
         Change = float(list(Data.tables.loc[Data.tables.Full_name == user_data['currency'].lower(), 'In_grivnas'])[0].split()[0])
+
         if user_data['transaction_option'] == 'Из гривны в ...':
             Sum1 = round(user_data['amount'] / Change, 5)
             await message.answer('Ну... Вот:   {0} {1}ов'.format(Sum1, user_data['currency']),
