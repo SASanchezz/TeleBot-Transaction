@@ -18,7 +18,9 @@ short.columns = ['Currency', 'From_dollar', 'To_dollar']
 long = tables[0][1]
 long.columns = ['Currency', 'From_dollar', 'To_dollar']
 #for i in long['Currency']:
-long = long.append({'Currency': 'Ukrainian Hryvna', 'From_dollar': tables_gryvna[0][0].iloc[0]['НБУ'], 'To_dollar': str(1/float(tables_gryvna[0][0].iloc[0]['НБУ']))},
+long = long.append({'Currency': 'Ukrainian Hryvna', 'From_dollar': tables_gryvna[0][0].iloc[0]['НБУ'][:-5], 'To_dollar': str(round(1/float(tables_gryvna[0][0].iloc[0]['НБУ'][:-5]), 6))},
+                   ignore_index=True)
+long = long.append({'Currency': 'Dollar', 'From_dollar': 1, 'To_dollar': 1},
                    ignore_index=True)
 #print(tables_gryvna[0][0].iloc[0]['НБУ'])
 print(long)
